@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023"],
+    /* No ambient type packages. This package is imported by the browser app as
+       well as the API, so it must not reach for Node built-ins — and without
+       this, TypeScript would quietly pull in whatever @types it finds up the
+       tree and let `process` or `Buffer` compile. */
+    "types": [],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}
