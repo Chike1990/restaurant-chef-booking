@@ -16,6 +16,7 @@ test-results/
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 
 # Local machine setup notes — paths, dotfiles and personal details, not for a public repo
 docs/setup-state.md
