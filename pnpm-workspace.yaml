@@ -1,0 +1,11 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm blocks dependency postinstall scripts by default, which is the right
+# default — a postinstall is arbitrary code execution at install time. esbuild
+# genuinely needs its one to link the native binary that Vite and Vitest run on.
+# As of pnpm 10 these settings live here, not in package.json; pnpm 12 renamed
+# the key from `onlyBuiltDependencies` to `allowBuilds`.
+allowBuilds:
+  esbuild: true

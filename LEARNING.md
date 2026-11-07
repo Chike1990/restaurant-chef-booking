@@ -1,7 +1,9 @@
 # Learning log
 
 ## Template
+
 ### YYYY-MM-DD · Topic
+
 - Learned:
 - Confused by:
 - Got wrong:
