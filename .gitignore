@@ -20,3 +20,11 @@ test-results/
 
 # Local machine setup notes — paths, dotfiles and personal details, not for a public repo
 docs/setup-state.md
+
+# Personal working files. Present in the working tree, never in a commit.
+CLAUDE.md
+plan-to-follow.md
+
+# Reference books — 191 MB of copyrighted PDFs. These must never reach a public
+# repo, both for size and because redistributing them is not ours to do.
+books/
