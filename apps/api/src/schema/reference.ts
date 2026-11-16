@@ -51,3 +51,11 @@ export const branchesRelations = relations(branches, ({ many }) => ({
   deliveryZones: many(deliveryZones),
   openingHours: many(openingHours),
 }))
+
+export const deliveryZonesRelations = relations(deliveryZones, ({ one }) => ({
+  branch: one(branches, { fields: [deliveryZones.branchId], references: [branches.id] }),
+}))
+
+export const openingHoursRelations = relations(openingHours, ({ one }) => ({
+  branch: one(branches, { fields: [openingHours.branchId], references: [branches.id] }),
+}))
