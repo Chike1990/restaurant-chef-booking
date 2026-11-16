@@ -19,6 +19,7 @@ type MenuItemSpec = {
   name: string
   priceNaira: number
   isQuickAdd?: boolean
+  countsForPackaging?: boolean
   description?: string
   optionGroups?: OptionGroupSpec[]
 }
@@ -154,10 +155,10 @@ const CATEGORIES: CategorySpec[] = [
     name: 'Drinks',
     sortOrder: 7,
     items: [
-      { name: 'Zobo 50cl', priceNaira: 1000 },
-      { name: 'Chapman', priceNaira: 1500 },
-      { name: 'Bottled water', priceNaira: 400 },
-      { name: 'Soft drink 35cl', priceNaira: 600 },
+      { name: 'Zobo 50cl', priceNaira: 1000, countsForPackaging: false },
+      { name: 'Chapman', priceNaira: 1500, countsForPackaging: false },
+      { name: 'Bottled water', priceNaira: 400, countsForPackaging: false },
+      { name: 'Soft drink 35cl', priceNaira: 600, countsForPackaging: false },
     ],
   },
 ]
@@ -276,6 +277,7 @@ async function seed() {
           description: item.description,
           basePriceKobo: naira(item.priceNaira),
           isQuickAdd: item.isQuickAdd ?? true,
+          countsForPackaging: item.countsForPackaging ?? true,
         })
         .returning()
       if (!menuItemRow) throw new Error(`menu item insert returned nothing for ${item.name}`)

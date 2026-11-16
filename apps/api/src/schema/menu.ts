@@ -20,6 +20,9 @@ export const menuItems = pgTable(
     imageUrl: text('image_url'),
     isAvailable: boolean('is_available').notNull().default(true),
     isQuickAdd: boolean('is_quick_add').notNull().default(true),
+    // Packaging is charged per meal unit — drinks don't need their own
+    // container, so this is false for the Drinks category.
+    countsForPackaging: boolean('counts_for_packaging').notNull().default(true),
     sortOrder: smallint('sort_order').notNull().default(0),
     ...timestamps,
   },
