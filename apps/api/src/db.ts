@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 import pg from 'pg'
 import { env } from './env.ts'
 import { logger } from './logger.ts'
+import * as schema from './schema/index.ts'
 
 export const pool = new pg.Pool({
   connectionString: env.DATABASE_URL,
@@ -15,9 +16,7 @@ pool.on('error', (error) => {
   logger.error({ err: error }, 'idle postgres client errored')
 })
 
-/* The schema lands in block 2; until then this is an untyped Drizzle instance
-   that can still run raw SQL for the health check. */
-export const db = drizzle(pool)
+export const db = drizzle(pool, { schema })
 
 export async function checkDatabase(): Promise<boolean> {
   try {
