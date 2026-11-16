@@ -8,3 +8,5 @@ export {
   formatNaira,
   ZERO_KOBO,
 } from './money.ts'
+
+export { type Phone, normalizePhone, phoneSchema } from './phone.ts'
