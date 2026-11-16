@@ -23,3 +23,7 @@ export function findZonesByBranchId(branchId: string) {
     orderBy: [asc(deliveryZones.name)],
   })
 }
+
+export function findZoneById(id: string) {
+  return db.query.deliveryZones.findFirst({ where: eq(deliveryZones.id, id) })
+}
