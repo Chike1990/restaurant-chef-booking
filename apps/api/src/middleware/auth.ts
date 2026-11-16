@@ -28,6 +28,26 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   }
 }
 
+/** Attaches req.user if a valid Bearer token is present, but never rejects —
+ *  for routes that support both guest and signed-in use (order creation). A
+ *  missing or invalid token just means the request proceeds as a guest. */
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const header = req.headers.authorization
+  if (!header?.startsWith('Bearer ')) {
+    next()
+    return
+  }
+
+  try {
+    const payload = verifyAccessToken(header.slice('Bearer '.length))
+    req.user = { id: payload.sub, role: payload.role }
+  } catch {
+    // Invalid token on an optional-auth route: proceed as a guest rather
+    // than rejecting a request that doesn't strictly need auth.
+  }
+  next()
+}
+
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   requireAuth(req, res, (error) => {
     if (error) {

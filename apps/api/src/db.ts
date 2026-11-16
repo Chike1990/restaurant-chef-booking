@@ -18,6 +18,11 @@ pool.on('error', (error) => {
 
 export const db = drizzle(pool, { schema })
 
+/** The transaction handle `db.transaction(async (tx) => ...)` passes to its
+ *  callback — exported so repo functions that must run inside a transaction
+ *  can accept it as a parameter instead of reaching for the module-level `db`. */
+export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
 export async function checkDatabase(): Promise<boolean> {
   try {
     await db.execute(sql`select 1`)

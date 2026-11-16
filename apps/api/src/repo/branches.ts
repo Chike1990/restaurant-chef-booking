@@ -17,6 +17,13 @@ export function findBranchById(id: string) {
   return db.query.branches.findFirst({ where: eq(branches.id, id) })
 }
 
+export function findBranchWithHoursById(id: string) {
+  return db.query.branches.findFirst({
+    where: eq(branches.id, id),
+    with: { openingHours: true },
+  })
+}
+
 export function findZonesByBranchId(branchId: string) {
   return db.query.deliveryZones.findMany({
     where: eq(deliveryZones.branchId, branchId),
