@@ -7,6 +7,8 @@ import { env } from './env.ts'
 import { logger } from './logger.ts'
 import { checkDatabase } from './db.ts'
 import { ProblemError, unprocessable } from './errors.ts'
+import { menuRouter } from './routes/menu.ts'
+import { branchesRouter } from './routes/branches.ts'
 
 export function createApp(): Express {
   const app = express()
@@ -29,6 +31,9 @@ export function createApp(): Express {
       checks: { database: databaseUp ? 'up' : 'down' },
     })
   })
+
+  app.use('/api', menuRouter)
+  app.use('/api', branchesRouter)
 
   app.use((_req, res) => {
     res.status(404).json({ type: 'about:blank', title: 'Not Found', status: 404 })
