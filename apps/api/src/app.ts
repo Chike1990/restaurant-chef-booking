@@ -2,9 +2,11 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import helmet from 'helmet'
 import cors from 'cors'
 import { pinoHttp } from 'pino-http'
+import { ZodError } from 'zod'
 import { env } from './env.ts'
 import { logger } from './logger.ts'
 import { checkDatabase } from './db.ts'
+import { ProblemError, unprocessable } from './errors.ts'
 
 export function createApp(): Express {
   const app = express()
@@ -32,9 +34,22 @@ export function createApp(): Express {
     res.status(404).json({ type: 'about:blank', title: 'Not Found', status: 404 })
   })
 
-  /* Placeholder error handler. Block 4 replaces this with proper RFC 7807
-     problem details once there are real domain errors to map. */
-  app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+  /* RFC 7807 problem details for every error. Never put error.message from
+     an unknown error into the response — that's how internals leak. */
+  app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    if (error instanceof ProblemError) {
+      res.status(error.status).json(error.toProblem())
+      return
+    }
+
+    if (error instanceof ZodError) {
+      const problem = unprocessable('The request body failed validation.', {
+        errors: error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
+      })
+      res.status(problem.status).json(problem.toProblem())
+      return
+    }
+
     logger.error({ err: error }, 'unhandled request error')
     res.status(500).json({ type: 'about:blank', title: 'Internal Server Error', status: 500 })
   })
