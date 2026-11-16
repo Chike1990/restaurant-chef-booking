@@ -10,6 +10,7 @@ import { ProblemError, unprocessable } from './errors.ts'
 import { menuRouter } from './routes/menu.ts'
 import { branchesRouter } from './routes/branches.ts'
 import { cartRouter } from './routes/cart.ts'
+import { authRouter } from './routes/auth.ts'
 
 export function createApp(): Express {
   const app = express()
@@ -36,6 +37,7 @@ export function createApp(): Express {
   app.use('/api', menuRouter)
   app.use('/api', branchesRouter)
   app.use('/api', cartRouter)
+  app.use('/api', authRouter)
 
   app.use((_req, res) => {
     res.status(404).json({ type: 'about:blank', title: 'Not Found', status: 404 })

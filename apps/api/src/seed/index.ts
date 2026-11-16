@@ -1,9 +1,12 @@
 import { eq } from 'drizzle-orm'
 import { naira } from '@golden-spoon/shared'
 import { closeDatabase, db } from '../db.ts'
+import { hashPassword } from '../security/password.ts'
 import * as s from '../schema/index.ts'
 
 const ADMIN_EMAIL = 'admin@goldenspooncuisine.com'
+/* Dev-only credential, obviously — this seed never runs against production. */
+const ADMIN_PASSWORD = 'change-me-admin-password'
 
 type OptionSpec = { name: string; surchargeNaira?: number }
 
@@ -310,12 +313,13 @@ async function seed() {
 
   await db.insert(s.users).values({
     email: ADMIN_EMAIL,
-    // TODO(block 4): replace with a real argon2 hash once auth lands.
-    passwordHash: 'TODO-not-a-real-hash',
+    passwordHash: await hashPassword(ADMIN_PASSWORD),
     fullName: 'Golden Spoon Admin',
     phone: '+2348000000000',
     role: 'admin',
   })
+
+  console.log(`admin login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`)
 }
 
 seed()

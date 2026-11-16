@@ -11,6 +11,7 @@ export default defineConfig({
       S3_ACCESS_KEY_ID: 'test-access-key',
       S3_SECRET_ACCESS_KEY: 'test-secret-key',
       LOG_LEVEL: 'silent',
+      JWT_SECRET: 'test-jwt-secret-obviously-fake-but-32-plus-chars',
     },
   },
 })

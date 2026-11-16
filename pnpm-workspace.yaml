@@ -8,4 +8,5 @@ packages:
 # As of pnpm 10 these settings live here, not in package.json; pnpm 12 renamed
 # the key from `onlyBuiltDependencies` to `allowBuilds`.
 allowBuilds:
+  argon2: true
   esbuild: true

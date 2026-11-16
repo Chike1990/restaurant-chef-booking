@@ -32,6 +32,9 @@ const envSchema = z.object({
     ),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+
+  /* Signs access tokens. 32+ chars so a weak secret can't be brute-forced. */
+  JWT_SECRET: z.string().min(32),
 })
 
 export type Env = z.infer<typeof envSchema>
