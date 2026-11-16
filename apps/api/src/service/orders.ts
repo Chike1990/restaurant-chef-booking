@@ -2,6 +2,7 @@ import { kobo } from '@golden-spoon/shared'
 import { isBranchOpen } from '../domain/branch-hours.ts'
 import { quoteOrder, type Fulfilment } from '../domain/pricing.ts'
 import { badRequest, conflict } from '../errors.ts'
+import { uniqueViolation } from '../pg-errors.ts'
 import { findBranchWithHoursById, findZoneById } from '../repo/branches.ts'
 import { findAvailableRewardForUser, redeemReward } from '../repo/loyalty.ts'
 import {
@@ -53,14 +54,6 @@ export type OrderDTO = {
 }
 
 export type CreateOrderResult = { order: OrderDTO; created: boolean }
-
-function constraintViolated(error: unknown): string | null {
-  if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505' && 'constraint' in error) {
-    const constraint = error.constraint
-    return typeof constraint === 'string' ? constraint : null
-  }
-  return null
-}
 
 function toOrderDTOFromExisting(order: Awaited<ReturnType<typeof findOrderByIdempotencyKey>>): OrderDTO {
   if (!order) throw new Error('invariant: toOrderDTOFromExisting called with no order')
@@ -179,7 +172,7 @@ export async function createOrder(input: CreateOrderInput, idempotencyKey: strin
             idempotencyKey,
           })
         } catch (error) {
-          const violated = constraintViolated(error)
+          const violated = uniqueViolation(error)
           if (violated === 'orders_order_number_unique' && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue
           throw error
         }
@@ -231,7 +224,7 @@ export async function createOrder(input: CreateOrderInput, idempotencyKey: strin
 
     return { order: orderDTO, created: true }
   } catch (error) {
-    if (constraintViolated(error) === 'orders_idempotency_key_idx') {
+    if (uniqueViolation(error) === 'orders_idempotency_key_idx') {
       // Raced with another request carrying the same idempotency key, which
       // committed first. Return what it created rather than erroring.
       const raced = await findOrderByIdempotencyKey(idempotencyKey)

@@ -1,4 +1,5 @@
 import { conflict, unauthorized } from '../errors.ts'
+import { uniqueViolation } from '../pg-errors.ts'
 import { findRefreshTokenByHash, insertRefreshToken, revokeRefreshToken } from '../repo/refresh-tokens.ts'
 import { findUserByEmail, findUserById, insertUser } from '../repo/users.ts'
 import type { users } from '../schema/index.ts'
@@ -26,10 +27,6 @@ export type AuthResult = {
   user: UserDTO
   accessToken: string
   refreshToken: string
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505'
 }
 
 function toUserDTO(user: UserRow): UserDTO {
@@ -62,7 +59,7 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
     // concurrent registration with the same email can still race past it,
     // so the unique index is the real guard. Map its violation to the same
     // 409 rather than a raw 500.
-    if (isUniqueViolation(error)) throw conflict('an account with this email already exists')
+    if (uniqueViolation(error) !== null) throw conflict('an account with this email already exists')
     throw error
   }
 
