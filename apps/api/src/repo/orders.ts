@@ -11,6 +11,36 @@ export function findOrderByIdempotencyKey(idempotencyKey: string) {
   })
 }
 
+/** Includes each item's menu item and category — payment needs the category
+ *  to decide which meal units earn a loyalty stamp (drinks and bakery
+ *  don't). */
+export function findOrderById(id: string) {
+  return db.query.orders.findFirst({
+    where: eq(orders.id, id),
+    with: {
+      items: {
+        with: { menuItem: { with: { category: true } } },
+      },
+    },
+  })
+}
+
+export function findOrderByOrderNumber(orderNumber: string) {
+  return db.query.orders.findFirst({
+    where: eq(orders.orderNumber, orderNumber),
+    with: {
+      items: { with: { options: true } },
+      statusEvents: { orderBy: (events, { asc }) => [asc(events.createdAt)] },
+    },
+  })
+}
+
+export async function updateOrderStatus(tx: DbTransaction, id: string, status: OrderStatus) {
+  const [row] = await tx.update(orders).set({ status }).where(eq(orders.id, id)).returning()
+  if (!row) throw new Error('order update returned nothing')
+  return row
+}
+
 export type NewOrder = typeof orders.$inferInsert
 
 export async function insertOrder(tx: DbTransaction, values: NewOrder) {
