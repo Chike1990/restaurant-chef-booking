@@ -12,6 +12,8 @@ import { branchesRouter } from './routes/branches.ts'
 import { cartRouter } from './routes/cart.ts'
 import { authRouter } from './routes/auth.ts'
 import { ordersRouter } from './routes/orders.ts'
+import { paymentsRouter } from './routes/payments.ts'
+import { loyaltyRouter } from './routes/loyalty.ts'
 
 export function createApp(): Express {
   const app = express()
@@ -40,6 +42,8 @@ export function createApp(): Express {
   app.use('/api', cartRouter)
   app.use('/api', authRouter)
   app.use('/api', ordersRouter)
+  app.use('/api', paymentsRouter)
+  app.use('/api', loyaltyRouter)
 
   app.use((_req, res) => {
     res.status(404).json({ type: 'about:blank', title: 'Not Found', status: 404 })
