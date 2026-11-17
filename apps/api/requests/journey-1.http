@@ -1,0 +1,98 @@
+### Journey 1: quote -> register -> create order -> pay -> confirmed.
+#
+# Run the two GET requests below first, then copy real ids out of their
+# responses into the five @variables underneath — ids are random per
+# pnpm db:seed, so nothing here is hardcoded.
+
+@host = http://localhost:3000
+
+### Look up a branch id (Awka) and, from its response, a delivery zone id.
+GET {{host}}/api/branches
+
+###
+# @branchId from the request above
+GET {{host}}/api/branches/REPLACE_WITH_BRANCH_ID/zones
+
+### Look up a menu item id (Ofe onugbu) and its Swallow/Protein option ids.
+GET {{host}}/api/menu
+
+### Paste real ids here before running anything below this line.
+@branchId = REPLACE_WITH_AWKA_BRANCH_ID
+@zoneId = REPLACE_WITH_AROMA_ZONE_ID
+@menuItemId = REPLACE_WITH_OFE_ONUGBU_ID
+@swallowOptionId = REPLACE_WITH_EBA_OPTION_ID
+@proteinOptionId = REPLACE_WITH_GOAT_MEAT_OPTION_ID
+@createOrderIdempotencyKey = journey-1-create-order-key
+@payIdempotencyKey = journey-1-pay-key
+
+### 1. Quote the cart before committing to anything. totalKobo in the body
+### is forged on purpose — the response must ignore it and price from the
+### database instead.
+POST {{host}}/api/cart/quote
+Content-Type: application/json
+
+{
+  "fulfilment": "delivery",
+  "zoneId": "{{zoneId}}",
+  "totalKobo": 1,
+  "lines": [
+    { "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 2 }
+  ]
+}
+
+### 2. Register. The response's accessToken feeds every authenticated
+### request below.
+# @name register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "journey1-{{$guid}}@example.com",
+  "password": "correct-horse-battery-staple",
+  "fullName": "Journey One Tester",
+  "phone": "0803 123 4567"
+}
+
+###
+@accessToken = {{register.response.body.$.accessToken}}
+
+### 3. Create the order.
+#
+# THE IDEMPOTENCY PROOF: send this exact request, then send it again
+# unchanged (same Idempotency-Key). The second response must come back at
+# 200 with the SAME order.id — not a new order at 201.
+# @name createOrder
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{createOrderIdempotencyKey}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "delivery",
+  "branchId": "{{branchId}}",
+  "zoneId": "{{zoneId}}",
+  "addressText": "12 Aroma Close",
+  "lines": [
+    { "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 2 }
+  ]
+}
+
+###
+@orderId = {{createOrder.response.body.$.order.id}}
+@orderNumber = {{createOrder.response.body.$.order.orderNumber}}
+
+### 4. Pay. Any card number not ending in 0000 approves.
+POST {{host}}/api/orders/{{orderId}}/pay
+Content-Type: application/json
+Idempotency-Key: {{payIdempotencyKey}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "method": "card",
+  "details": { "cardNumber": "4111111111111111" }
+}
+
+### 5. Fetch by order number — no auth needed, a guest could do this with
+### just the number. Confirm status: "paid" with a two-event timeline
+### (null -> pending_payment, pending_payment -> paid).
+GET {{host}}/api/orders/{{orderNumber}}

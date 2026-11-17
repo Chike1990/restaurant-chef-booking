@@ -1,0 +1,161 @@
+### Journey 2: five qualifying orders -> a reward becomes redeemable ->
+### redeem it -> apply it at checkout on a sixth order.
+#
+# Same prerequisite as journey-1.http: paste real ids below first.
+
+@host = http://localhost:3000
+
+@branchId = REPLACE_WITH_AWKA_BRANCH_ID
+@menuItemId = REPLACE_WITH_OFE_ONUGBU_ID
+@swallowOptionId = REPLACE_WITH_EBA_OPTION_ID
+@proteinOptionId = REPLACE_WITH_GOAT_MEAT_OPTION_ID
+
+### Register once — every order and the redeem below belongs to this user.
+# @name register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "journey2-{{$guid}}@example.com",
+  "password": "correct-horse-battery-staple",
+  "fullName": "Journey Two Tester",
+  "phone": "0803 123 4567"
+}
+
+###
+@accessToken = {{register.response.body.$.accessToken}}
+
+### --- Order 1 of 5: pickup, one qualifying unit = one stamp. ---
+# @name order1
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "pickup",
+  "branchId": "{{branchId}}",
+  "lines": [{ "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 1 }]
+}
+
+###
+POST {{host}}/api/orders/{{order1.response.body.$.order.id}}/pay
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{ "method": "card", "details": { "cardNumber": "4111111111111111" } }
+
+### --- Order 2 of 5 ---
+# @name order2
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "pickup",
+  "branchId": "{{branchId}}",
+  "lines": [{ "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 1 }]
+}
+
+###
+POST {{host}}/api/orders/{{order2.response.body.$.order.id}}/pay
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{ "method": "card", "details": { "cardNumber": "4111111111111111" } }
+
+### --- Order 3 of 5 ---
+# @name order3
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "pickup",
+  "branchId": "{{branchId}}",
+  "lines": [{ "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 1 }]
+}
+
+###
+POST {{host}}/api/orders/{{order3.response.body.$.order.id}}/pay
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{ "method": "card", "details": { "cardNumber": "4111111111111111" } }
+
+### --- Order 4 of 5 ---
+# @name order4
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "pickup",
+  "branchId": "{{branchId}}",
+  "lines": [{ "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 1 }]
+}
+
+###
+POST {{host}}/api/orders/{{order4.response.body.$.order.id}}/pay
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{ "method": "card", "details": { "cardNumber": "4111111111111111" } }
+
+### --- Order 5 of 5 ---
+# @name order5
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "pickup",
+  "branchId": "{{branchId}}",
+  "lines": [{ "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 1 }]
+}
+
+###
+POST {{host}}/api/orders/{{order5.response.body.$.order.id}}/pay
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{ "method": "card", "details": { "cardNumber": "4111111111111111" } }
+
+### Balance should now be 5 — enough stamps for a reward.
+GET {{host}}/api/loyalty/me
+Authorization: Bearer {{accessToken}}
+
+### Redeem: converts 5 stamps into one issued reward row.
+# @name redeem
+POST {{host}}/api/loyalty/redeem
+Authorization: Bearer {{accessToken}}
+
+### Order 6: apply the reward at checkout. discountKobo on this order
+### should equal its one unit's price, and totalKobo should be reduced by
+### exactly that much.
+# @name order6
+POST {{host}}/api/orders
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "fulfilment": "pickup",
+  "branchId": "{{branchId}}",
+  "rewardApplied": true,
+  "lines": [{ "menuItemId": "{{menuItemId}}", "optionIds": ["{{swallowOptionId}}", "{{proteinOptionId}}"], "quantity": 1 }]
+}
+
+### Confirm: balance is back to 0 (5 earned, 5 spent on the redeem above),
+### and rewardsAvailable no longer lists the one just applied.
+GET {{host}}/api/loyalty/me
+Authorization: Bearer {{accessToken}}

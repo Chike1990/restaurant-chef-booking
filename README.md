@@ -1,6 +1,6 @@
 # Golden Spoon Cuisine
 
-Food ordering, loyalty rewards and event bookings for Golden Spoon Cuisine, Awka — _"Whatever the problem, chop first."_
+Food ordering, loyalty rewards and event bookings for Golden Spoon Cuisine, Awka... _"Whatever the problem, chop first."_
 
 **Stack:** React 19 + Vite, Express 5, PostgreSQL, Drizzle, TypeScript, Docker, Terraform, AWS
 
