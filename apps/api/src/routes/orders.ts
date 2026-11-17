@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { badRequest } from '../errors.ts'
 import { optionalAuth } from '../middleware/auth.ts'
-import { createOrder } from '../service/orders.ts'
+import { createOrder, getOrderByNumber } from '../service/orders.ts'
 
 const orderLineSchema = z.object({
   menuItemId: z.string().min(1),
@@ -38,4 +38,12 @@ ordersRouter.post('/orders', optionalAuth, async (req, res) => {
   const input = createOrderSchema.parse(req.body)
   const { order, created } = await createOrder({ ...input, userId: req.user?.id ?? null }, idempotencyKey)
   res.status(created ? 201 : 200).json({ order })
+})
+
+ordersRouter.get('/orders/:orderNumber', async (req, res) => {
+  const { orderNumber } = req.params
+  if (!orderNumber) throw badRequest('order number is required')
+
+  const order = await getOrderByNumber(orderNumber)
+  res.json({ order })
 })

@@ -1,12 +1,13 @@
 import { kobo } from '@golden-spoon/shared'
 import { isBranchOpen } from '../domain/branch-hours.ts'
 import { quoteOrder, type Fulfilment } from '../domain/pricing.ts'
-import { badRequest, conflict } from '../errors.ts'
+import { badRequest, conflict, notFound } from '../errors.ts'
 import { uniqueViolation } from '../pg-errors.ts'
 import { findBranchWithHoursById, findZoneById } from '../repo/branches.ts'
 import { findAvailableRewardForUser, redeemReward } from '../repo/loyalty.ts'
 import {
   findOrderByIdempotencyKey,
+  findOrderByOrderNumber,
   insertOrderItem,
   insertOrderItemOptions,
   insertOrderStatusEvent,
@@ -231,5 +232,24 @@ export async function createOrder(input: CreateOrderInput, idempotencyKey: strin
       if (raced) return { order: toOrderDTOFromExisting(raced), created: false }
     }
     throw error
+  }
+}
+
+export type StatusEventDTO = { fromStatus: string | null; toStatus: string; createdAt: string }
+export type OrderTrackingDTO = OrderDTO & { statusTimeline: StatusEventDTO[] }
+
+/** Public by order number — no account needed, so a guest can track the
+ *  order they just placed using only the number they were given. */
+export async function getOrderByNumber(orderNumber: string): Promise<OrderTrackingDTO> {
+  const order = await findOrderByOrderNumber(orderNumber)
+  if (!order) throw notFound(`unknown order "${orderNumber}"`)
+
+  return {
+    ...toOrderDTOFromExisting(order),
+    statusTimeline: order.statusEvents.map((event) => ({
+      fromStatus: event.fromStatus,
+      toStatus: event.toStatus,
+      createdAt: event.createdAt.toISOString(),
+    })),
   }
 }
